@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use easy_scraper::Pattern;
+use regex::Regex;
 
 const DOMAIN: &str = "https://www.hydrodaten.admin.ch/de/";
 const LIST: &str = "stationen-und-daten.html";
@@ -15,6 +16,8 @@ enum ScrapeError {
 #[derive(Debug)]
 struct Station {
     id: u16,
+    name: String,
+    water: String,
     url: String,
 }
 
@@ -28,6 +31,11 @@ fn main() {
     }
 }
 
+fn remove_tags(body: &str) -> String {
+    let regex = Regex::new(r"<[^>]*>").unwrap();
+    regex.replace_all(body, "").to_string()
+}
+
 fn extract(body: &str) -> Vec<Station> {
     let mut stations = Vec::new();
 
@@ -36,7 +44,7 @@ fn extract(body: &str) -> Vec<Station> {
         <tbody>
             <tr>
                 <td>{{id}}</td>
-                <td>{{name:*}}</td>
+                <td><a>{{full_name:*}}</a></td>
                 <td>{{datetime}}</td>
                 <td>{{measurement}}</td>
                 <td>{{max}}</td>
@@ -51,10 +59,18 @@ fn extract(body: &str) -> Vec<Station> {
 
     println!("Length: {}", ms.len());
     for m in ms {
-        let id = m["id"].parse::<u16>().unwrap();
-        let url = format!("{}{}.html", DOMAIN, id);
-        let station = Station { id, url };
-        stations.push(station);
+        let full_name = remove_tags(&m["full_name"]);
+        let full_name = full_name.split_once('-');
+
+        if let Some((water, name)) = full_name  {
+            let id = m["id"].parse::<u16>().unwrap();
+            let name = name.trim().to_string();
+            let water = water.trim().to_string();
+            let url = format!("{}{}.html", DOMAIN, id);
+            let station = Station { id, name, water, url };
+
+            stations.push(station);
+        }
     }
 
     stations
