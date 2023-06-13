@@ -1,7 +1,8 @@
 use std::io::Read;
-
+use clap::{Parser, Subcommand};
 use easy_scraper::Pattern;
 use regex::Regex;
+use cli_table::{format::Justify, print_stdout, Cell, Style, Table};
 
 const DOMAIN: &str = "https://www.hydrodaten.admin.ch/de/";
 const LIST: &str = "stationen-und-daten.html";
@@ -21,13 +22,48 @@ struct Station {
     url: String,
 }
 
+#[derive(Debug, Parser)]
+#[command(name = "hydro", version = "0.1.0", author = "octogradiste")]
+#[command(about = "Simple rust CLI to retrieve information from hydrodaten.admin.ch")]
+struct CLI {
+    #[command(subcommand)]
+    command: Commands
+}
+
+#[derive(Debug, Subcommand)]
+enum Commands {
+    // List all stations
+    List
+}
+
 fn main() {
+    let args = CLI::parse();
+
     let url = format!("{}{}", DOMAIN, LIST);
     let body = scrape(&url);
     let body = body.unwrap();
     let stations = extract(&body);
-    for station in stations {
-        println!("{:?}", station);
+
+    let table: Vec<_> = stations.into_iter().map(|station| {
+        vec![
+            station.id.cell().justify(Justify::Right),
+            station.name.cell(),
+            station.water.cell(),
+            station.url.cell(),
+        ]
+    }).collect();
+
+    let table = table.table().title(vec![
+        "ID".cell().bold(true),
+        "Name".cell().bold(true),
+        "Water".cell().bold(true),
+        "URL".cell().bold(true),
+    ]).bold(true);
+
+    let table = table.display().unwrap();
+
+    match args.command {
+        Commands::List => println!("{}", table),
     }
 }
 
