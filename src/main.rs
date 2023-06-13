@@ -1,4 +1,4 @@
-use hydro::display_stations;
+use hydro::{display_stations, display_info};
 use hydro::scraping::get_stations;
 
 use clap::{Parser, Subcommand};
@@ -19,10 +19,16 @@ enum Commands {
         #[arg(short, long)]
         first: Option<usize>,
 
-        /// Display the station's URL
+        /// Display the station URL
         #[arg(short)]
         url: bool,
     },
+    /// Information about a station
+    Info {
+        /// The station ID
+        #[arg(required = true)]
+        id: u16,
+    }
 }
 
 fn main() {
@@ -32,5 +38,6 @@ fn main() {
 
     match args.command {
         Commands::List { first, url } => display_stations(stations, first, url),
+        Commands::Info { id } => display_info(stations, id),
     }
 }

@@ -1,6 +1,6 @@
 use scraping::Station;
 
-use cli_table::{format::Justify, Cell, Style, Table};
+use cli_table::{format::{Justify, Border}, Cell, Style, Table};
 
 pub mod scraping;
 
@@ -29,4 +29,22 @@ pub fn display_stations(stations: Vec<Station>, first: Option<usize>, url: bool)
     let table = table.table().title(titles).bold(true);
     let table = table.display().unwrap();
     println!("{}", table);
+}
+
+pub fn display_info(stations: Vec<Station>, id: u16) {
+    let station = stations.into_iter().find(|station| station.id == id);
+
+    if let Some(station) = station {
+        let table = vec![
+            vec!["ID".cell().bold(true), station.id.cell()],
+            vec!["Name".cell().bold(true), station.name.cell()],
+            vec!["Water".cell().bold(true), station.water.cell()],
+            vec!["URL".cell().bold(true), station.url.cell()],
+        ].table().bold(true).border(Border::builder().build());
+
+        let table = table.display().unwrap();
+        println!("{}", table);
+    } else {
+        println!("Station {id} not found");
+    }
 }
