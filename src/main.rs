@@ -1,8 +1,8 @@
-use std::io::Read;
+use std::{io::Read};
 use clap::{Parser, Subcommand};
 use easy_scraper::Pattern;
 use regex::Regex;
-use cli_table::{format::Justify, print_stdout, Cell, Style, Table};
+use cli_table::{format::Justify, Cell, Style, Table};
 
 const DOMAIN: &str = "https://www.hydrodaten.admin.ch/de/";
 const LIST: &str = "stationen-und-daten.html";
@@ -24,7 +24,7 @@ struct Station {
 
 #[derive(Debug, Parser)]
 #[command(name = "hydro", version = "0.1.0", author = "octogradiste")]
-#[command(about = "Simple rust CLI to retrieve information from hydrodaten.admin.ch")]
+#[command(about = "A simple rust CLI to retrieve information from hydrodaten.admin.ch")]
 struct CLI {
     #[command(subcommand)]
     command: Commands
@@ -32,9 +32,18 @@ struct CLI {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    // List all stations
-    List
+    /// List all stations
+    List {
+        /// Display the FIRST stations
+        #[arg(short, long)]
+        first: Option<usize>,
+
+        /// Display the station's URL
+        #[arg(short)]
+        url: bool,
+    },
 }
+
 
 fn main() {
     let args = CLI::parse();
@@ -44,27 +53,38 @@ fn main() {
     let body = body.unwrap();
     let stations = extract(&body);
 
-    let table: Vec<_> = stations.into_iter().map(|station| {
-        vec![
+    match args.command {
+        Commands::List { first, url } => {
+            print_stations(stations, first, url)
+        }
+    }
+}
+
+fn print_stations(stations: Vec<Station>, first: Option<usize>, url: bool) {
+    let table = stations.into_iter().map(|station| {
+        let mut row = vec![
             station.id.cell().justify(Justify::Right),
             station.name.cell(),
             station.water.cell(),
-            station.url.cell(),
-        ]
-    }).collect();
+        ];
+        if url {
+            row.push(station.url.cell());
+        }
+        row
+    }).take(first.unwrap_or(usize::MAX));
 
-    let table = table.table().title(vec![
+    let mut titles = vec![
         "ID".cell().bold(true),
         "Name".cell().bold(true),
         "Water".cell().bold(true),
-        "URL".cell().bold(true),
-    ]).bold(true);
-
-    let table = table.display().unwrap();
-
-    match args.command {
-        Commands::List => println!("{}", table),
+    ];
+    if url {
+        titles.push("URL".cell().bold(true));
     }
+
+    let table = table.table().title(titles).bold(true);
+    let table = table.display().unwrap();
+    println!("{}", table);
 }
 
 fn remove_tags(body: &str) -> String {
