@@ -23,6 +23,7 @@ enum Commands {
         #[arg(short)]
         url: bool,
     },
+
     /// Information about a station
     Info {
         /// The station ID
@@ -34,10 +35,13 @@ enum Commands {
 fn main() {
     let args = CLI::parse();
 
-    let stations = get_stations().unwrap();
+    let stations = get_stations();
 
-    match args.command {
-        Commands::List { first, url } => display_stations(stations, first, url),
-        Commands::Info { id } => display_info(stations, id),
+    match stations {
+        Err(err) => eprintln!("{err}"),
+        Ok(stations) =>  match args.command {
+            Commands::List { first, url } => display_stations(stations, first, url),
+            Commands::Info { id } => display_info(stations, id),
+        },
     }
 }

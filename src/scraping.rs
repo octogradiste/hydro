@@ -1,5 +1,5 @@
 
-use std::{io::Read};
+use std::{io::Read, fmt::{Display, Formatter, self}};
 use easy_scraper::Pattern;
 use regex::Regex;
 
@@ -11,6 +11,16 @@ pub enum ScrapingError {
     ServerNotReachable,
     BadResponse,
     CorruptedBody,
+}
+
+impl Display for ScrapingError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            ScrapingError::ServerNotReachable => write!(f, "Server not reachable."),
+            ScrapingError::BadResponse => write!(f, "Bad response."),
+            ScrapingError::CorruptedBody => write!(f, "Corrupted body."),
+        }
+    }
 }
 
 #[derive(Debug)]

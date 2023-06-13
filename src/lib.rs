@@ -45,6 +45,6 @@ pub fn display_info(stations: Vec<Station>, id: u16) {
         let table = table.display().unwrap();
         println!("{}", table);
     } else {
-        println!("Station {id} not found");
+        eprintln!("Station {id} not found.");
     }
 }
