@@ -1,6 +1,6 @@
 use scraping::Station;
 
-use cli_table::{format::{Justify, Border}, Cell, Style, Table};
+use cli_table::{format::{Justify, Border, Separator, VerticalLine}, Cell, Style, Table};
 
 pub mod scraping;
 
@@ -24,6 +24,9 @@ pub fn display_stations(stations: Vec<Station>, url: bool) {
             station.id.cell().justify(Justify::Right),
             station.name.cell(),
             station.water.cell(),
+            format!("{:.1} °C", station.measurement).cell().justify(Justify::Right),
+            format!("{:.1} °C", station.max).cell().justify(Justify::Right),
+            station.time.cell(),
         ];
         if url {
             row.push(station.url.cell());
@@ -35,12 +38,18 @@ pub fn display_stations(stations: Vec<Station>, url: bool) {
         "ID".cell().bold(true),
         "Name".cell().bold(true),
         "Water".cell().bold(true),
+        "Measurement".cell().bold(true),
+        "Max 24h".cell().bold(true),
+        "Time".cell().bold(true),
     ];
     if url {
         titles.push("URL".cell().bold(true));
     }
 
-    let table = table.table().title(titles).bold(true);
+    let table = table.table()
+        .title(titles)
+        .bold(true);
+
     let table = table.display().unwrap();
     println!("{}", table);
 }
@@ -50,11 +59,18 @@ pub fn display_info(stations: Vec<Station>, id: u16) {
 
     if let Some(station) = station {
         let table = vec![
-            vec!["ID".cell().bold(true), station.id.cell()],
-            vec!["Name".cell().bold(true), station.name.cell()],
-            vec!["Water".cell().bold(true), station.water.cell()],
-            vec!["URL".cell().bold(true), station.url.cell()],
-        ].table().bold(true).border(Border::builder().build());
+            vec!["ID".cell().bold(true).justify(Justify::Right), station.id.cell()],
+            vec!["Name".cell().bold(true).justify(Justify::Right), station.name.cell()],
+            vec!["Water".cell().bold(true).justify(Justify::Right), station.water.cell()],
+            vec!["Measurement".cell().bold(true).justify(Justify::Right), format!("{:.1} °C", station.measurement).cell()],
+            vec!["Max 24h".cell().bold(true).justify(Justify::Right), format!("{:.1} °C", station.max).cell()],
+            vec!["Time".cell().bold(true).justify(Justify::Right), station.time.cell()],
+            vec!["URL".cell().bold(true).justify(Justify::Right), station.url.cell()],
+        ];
+        let table = table.table()
+            .bold(true)
+            .border(Border::builder().build())
+            .separator(Separator::builder().column(Some(VerticalLine::default())).build());
 
         let table = table.display().unwrap();
         println!("{}", table);

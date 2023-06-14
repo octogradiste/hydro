@@ -28,6 +28,9 @@ pub struct Station {
     pub id: u16,
     pub name: String,
     pub water: String,
+    pub measurement: f32,
+    pub max: f32,
+    pub time: String,
     pub url: String,
 }
 
@@ -61,18 +64,21 @@ fn extract(body: &str) -> Vec<Station> {
     let ms = pat.matches(body);
 
     for m in ms {
+        let id = m["id"].parse::<u16>().unwrap();
+
         let full_name = remove_tags(&m["full_name"]);
-        let full_name = full_name.split_once('-');
+        let (water, name) = full_name.split_once('-').unwrap();
+        let name = name.trim().to_string();
+        let water = water.trim().to_string();
 
-        if let Some((water, name)) = full_name  {
-            let id = m["id"].parse::<u16>().unwrap();
-            let name = name.trim().to_string();
-            let water = water.trim().to_string();
-            let url = format!("{}{}.html", DOMAIN, id);
-            let station = Station { id, name, water, url };
+        let measurement = m["measurement"].parse::<f32>().unwrap();
+        let max = m["max"].parse::<f32>().unwrap();
+        let time = m["datetime"].trim().to_string();
 
-            stations.push(station);
-        }
+        let url = format!("{}{}.html", DOMAIN, id);
+
+        let station = Station { id, name, water, measurement, max, time, url };
+        stations.push(station);
     }
 
     stations
@@ -131,74 +137,46 @@ mod extract_tests {
     #[test]
     fn should_correctly_return_all_stations() {
         let body = r#"
-            <table>
-                <tbody>
-                    <tr data-station-id="2416" data-station-name="aabach hitzkirch richensee">
-                        <td>
-                            2416
-                        </td>
-                        <td>
-                            <a href="/de/2416.html"><strong>Aabach</strong> - Hitzkirch, Richensee</a>
-                        </td>
-                        <td>
-                            14.06.2023 09:40
-                        </td>
-                        <td class="text-right">
-                            1.1
-                        </td>
-                        <td class="text-right">
-                            1.2
-                        </td>
-                        <td>
-                            m<sup>3</sup>/s
-                        </td>
-                        <td>
-                            <p><a href="/lhg/az/dwh/plots/surface/7day/2416_7.PDF" target="_blank"><span
-                                        class="glyphicon glyphicon-stats glyphicon-spaced-r"></span>7 Tage</a></p>
-                        </td>
-                    </tr>
-                    <tr data-station-id="6572" data-station-name="airolo - cima del bosco">
-                        <td>
-                            6572
-                        </td>
-                        <td>
-                            <a href="/de/6572.html">Airolo - Cima del Bosco</a>
-                        </td>
-                        <td>
-                            14.06.2023 09:40
-                        </td>
-                        <td class="text-right">
-                            240
-                        </td>
-                        <td class="text-right">
-                            420
-                        </td>
-                        <td>
-                            l/min
-                        </td>
-                        <td>
-                            <p><a href="/lhg/az/dwh/plots/naqua/90day/GW6572_90.PDF" target="_blank"><span
-                                        class="glyphicon glyphicon-stats glyphicon-spaced-r"></span>3 Monate</a></p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+<table>
+    <tbody>
+        <tr data-station-id="2135" data-station-name="aare bern schonau">
+            <td>
+                2135
+            </td>
+            <td>
+                <a href="/de/2135.html"><strong>Aare</strong> - Bern, Schönau</a>
+            </td>
+            <td>
+                14.06.2023 10:20
+            </td>
+            <td class="text-right">
+                16.7
+            </td>
+            <td class="text-right">
+                18.5
+            </td>
+            <td>
+                °C
+            </td>
+            <td>
+                <p><a href="/lhg/az/dwh/plots/surface/7day/2135_7.PDF" target="_blank"><span class="glyphicon glyphicon-stats glyphicon-spaced-r"></span>7 Tage</a></p>
+            </td>
+        </tr>
+    </tbody>
+</table>
         "#;
 
         let stations = extract(body);
         let expected = vec![
             Station {
-                id: 2416,
-                name: "Hitzkirch, Richensee".to_string(),
-                water: "Aabach".to_string(),
-                url: "https://www.hydrodaten.admin.ch/de/2416.html".to_string(),
-            },
-            Station {
-                id: 6572,
-                name: "Cima del Bosco".to_string(),
-                water: "Airolo".to_string(),
-                url: "https://www.hydrodaten.admin.ch/de/6572.html".to_string(),
-            },
+                id: 2135,
+                name: "Bern, Schönau".to_string(),
+                water: "Aare".to_string(),
+                measurement: 16.7,
+                max: 18.5,
+                time: "14.06.2023 10:20".to_string(),
+                url: "https://www.hydrodaten.admin.ch/de/2135.html".to_string(),
+            }
         ];
 
         assert_eq!(stations, expected);
