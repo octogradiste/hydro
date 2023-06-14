@@ -4,7 +4,21 @@ use cli_table::{format::{Justify, Border}, Cell, Style, Table};
 
 pub mod scraping;
 
-pub fn display_stations(stations: Vec<Station>, first: Option<usize>, url: bool) {
+pub fn filter_stations(stations: &mut Vec<Station>, first: Option<usize>, name: Option<String>, water: Option<String>) {
+    if let Some(name) = name {
+        stations.retain(|station| station.name.to_lowercase().contains(&name.to_lowercase()));
+    }
+
+    if let Some(water) = water {
+        stations.retain(|station| station.water.to_lowercase().contains(&water.to_lowercase()));
+    }
+
+    if let Some(first) = first {
+        stations.truncate(first);
+    }
+}
+
+pub fn display_stations(stations: Vec<Station>, url: bool) {
     let table = stations.into_iter().map(|station| {
         let mut row = vec![
             station.id.cell().justify(Justify::Right),
@@ -15,7 +29,7 @@ pub fn display_stations(stations: Vec<Station>, first: Option<usize>, url: bool)
             row.push(station.url.cell());
         }
         row
-    }).take(first.unwrap_or(usize::MAX));
+    });
 
     let mut titles = vec![
         "ID".cell().bold(true),

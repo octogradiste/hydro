@@ -4,7 +4,7 @@ use easy_scraper::Pattern;
 use regex::Regex;
 
 const DOMAIN: &str = "https://www.hydrodaten.admin.ch/de/";
-const LIST: &str = "stationen-und-daten.html";
+const TEMPERATURE_TABLE: &str = "tabelle-der-wassertemperaturen.html";
 
 #[derive(Debug)]
 pub enum ScrapingError {
@@ -32,7 +32,7 @@ pub struct Station {
 }
 
 pub fn get_stations() -> Result<Vec<Station>, ScrapingError> {
-    let url = format!("{}{}", DOMAIN, LIST);
+    let url = format!("{}{}", DOMAIN, TEMPERATURE_TABLE);
     let body = scrape(&url)?;
     let stations = extract(&body);
 
