@@ -23,7 +23,7 @@ impl Display for ScrapingError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Station {
     pub id: u16,
     pub name: String,
@@ -100,5 +100,107 @@ fn scrape(url: &str) -> Result<String, ScrapingError> {
                 },
             }
         },
+    }
+}
+
+#[cfg(test)]
+mod remove_tags_tests {
+    use super::remove_tags;
+
+    #[test]
+    fn should_return_same_string_when_has_no_tags() {
+        let body = "A string without tags.";
+        let result = remove_tags(body);
+        assert_eq!(result, body);
+    }
+
+    #[test]
+    fn should_correctly_remove_tags() {
+        let body = "<sometag>and</closingtag>";
+        let result = remove_tags(body);
+        assert_eq!(result, "and");
+    }
+}
+
+#[cfg(test)]
+mod extract_tests {
+    use crate::scraping::Station;
+
+    use super::extract;
+
+    #[test]
+    fn should_correctly_return_all_stations() {
+        let body = r#"
+            <table>
+                <tbody>
+                    <tr data-station-id="2416" data-station-name="aabach hitzkirch richensee">
+                        <td>
+                            2416
+                        </td>
+                        <td>
+                            <a href="/de/2416.html"><strong>Aabach</strong> - Hitzkirch, Richensee</a>
+                        </td>
+                        <td>
+                            14.06.2023 09:40
+                        </td>
+                        <td class="text-right">
+                            1.1
+                        </td>
+                        <td class="text-right">
+                            1.2
+                        </td>
+                        <td>
+                            m<sup>3</sup>/s
+                        </td>
+                        <td>
+                            <p><a href="/lhg/az/dwh/plots/surface/7day/2416_7.PDF" target="_blank"><span
+                                        class="glyphicon glyphicon-stats glyphicon-spaced-r"></span>7 Tage</a></p>
+                        </td>
+                    </tr>
+                    <tr data-station-id="6572" data-station-name="airolo - cima del bosco">
+                        <td>
+                            6572
+                        </td>
+                        <td>
+                            <a href="/de/6572.html">Airolo - Cima del Bosco</a>
+                        </td>
+                        <td>
+                            14.06.2023 09:40
+                        </td>
+                        <td class="text-right">
+                            240
+                        </td>
+                        <td class="text-right">
+                            420
+                        </td>
+                        <td>
+                            l/min
+                        </td>
+                        <td>
+                            <p><a href="/lhg/az/dwh/plots/naqua/90day/GW6572_90.PDF" target="_blank"><span
+                                        class="glyphicon glyphicon-stats glyphicon-spaced-r"></span>3 Monate</a></p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        "#;
+
+        let stations = extract(body);
+        let expected = vec![
+            Station {
+                id: 2416,
+                name: "Hitzkirch, Richensee".to_string(),
+                water: "Aabach".to_string(),
+                url: "https://www.hydrodaten.admin.ch/de/2416.html".to_string(),
+            },
+            Station {
+                id: 6572,
+                name: "Cima del Bosco".to_string(),
+                water: "Airolo".to_string(),
+                url: "https://www.hydrodaten.admin.ch/de/6572.html".to_string(),
+            },
+        ];
+
+        assert_eq!(stations, expected);
     }
 }
