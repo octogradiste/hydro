@@ -2,6 +2,14 @@
 
 A simple rust CLI to retrieve information about water temperature from the [Federal Office for the environment](https://www.hydrodaten.admin.ch/en/water-temperature-table.html) website.
 
+## Installation
+
+The easiest way install it is to use cargo:
+```bash
+cargo install --git https://github.com/octogradiste/hydro.git
+```
+Note that this will build the full project and might take a few seconds.
+
 ## Usage
 
 To list all available stations use the following command:
