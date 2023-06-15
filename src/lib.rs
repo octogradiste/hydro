@@ -3,6 +3,7 @@ use scraping::Station;
 use cli_table::{format::{Justify, Border, Separator, VerticalLine}, Cell, Style, Table};
 
 pub mod scraping;
+pub mod favorites;
 
 pub fn filter_stations(stations: &mut Vec<Station>, first: Option<usize>, name: Option<String>, water: Option<String>) {
     if let Some(name) = name {
@@ -18,18 +19,18 @@ pub fn filter_stations(stations: &mut Vec<Station>, first: Option<usize>, name: 
     }
 }
 
-pub fn display_stations(stations: Vec<Station>, url: bool) {
+pub fn display_stations(stations: &Vec<Station>, url: bool) {
     let table = stations.into_iter().map(|station| {
         let mut row = vec![
             station.id.cell().justify(Justify::Right),
-            station.name.cell(),
-            station.water.cell(),
+            station.name.clone().cell(),
+            station.water.clone().cell(),
             format!("{:.1} °C", station.measurement).cell().justify(Justify::Right),
             format!("{:.1} °C", station.max).cell().justify(Justify::Right),
-            station.time.cell(),
+            station.time.clone().cell(),
         ];
         if url {
-            row.push(station.url.cell());
+            row.push(station.url.clone().cell());
         }
         row
     });
