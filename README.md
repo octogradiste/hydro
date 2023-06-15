@@ -32,3 +32,18 @@ To get the water temperature for a specific station use the following command:
 ```bash
 hydro get <ID>
 ```
+
+To add one or more station to your favorites use the following command:
+```bash
+hydro fav add <IDS>...
+```
+
+To remove one or more station from your favorites use the following command:
+```bash
+hydro fav rm <IDS>...
+```
+
+To list all your favorite stations use the following command:
+```bash
+hydro fav
+```
