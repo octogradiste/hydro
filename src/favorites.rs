@@ -1,7 +1,7 @@
 use std::{collections::HashSet, fs::{File, OpenOptions, create_dir_all}, io::{BufReader, BufWriter}, path::Path};
 
 
-const FAVORITES_FILE: &str = "~/.config/hydro/favorites.json";
+const FAVORITES_FILE: &str = ".config/hydro/favorites.json";
 
 pub fn load() -> Result<HashSet<u16>, String> {
     let file = open_favs_file()?;
@@ -20,13 +20,16 @@ pub fn save(favs: &HashSet<u16>) -> Result<(), String> {
 
     let writer = BufWriter::new(file);
     serde_json::to_writer(writer, &favs)
-        .map_err(|err| format!("Could not write file {}: {}", FAVORITES_FILE, err))?;
+        .map_err(|err| format!("Could not write file ~/{}: {}", FAVORITES_FILE, err))?;
 
     Ok(())
 }
 
 fn open_favs_file() -> Result<File, String> {
-    let path = Path::new(FAVORITES_FILE);
+    let home = std::env::var("HOME")
+        .map_err(|err| format!("Couldn't find home directory: {}", err))?;
+
+    let path = Path::new(&home).join(FAVORITES_FILE);
     let dir = path.parent().unwrap();
 
     if !dir.exists() {
@@ -39,5 +42,5 @@ fn open_favs_file() -> Result<File, String> {
         .write(true)
         .create(true)
         .open(path)
-        .map_err(|err| format!("Could not open file {}: {}", FAVORITES_FILE, err))
+        .map_err(|err| format!("Could not open file ~/{}: {}", FAVORITES_FILE, err))
 }
